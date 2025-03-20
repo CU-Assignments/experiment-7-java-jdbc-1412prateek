@@ -1,0 +1,103 @@
+import java.sql.*;
+import java.util.Scanner;
+
+public class ProductCRUD {
+    static final String URL = "jdbc:mysql://localhost:3306/ShopDB?useSSL=false&serverTimezone=UTC";
+    static final String USER = "root";
+    static final String PASSWORD = "123456";
+
+    public static void main(String[] args) {
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             Scanner sc = new Scanner(System.in)) {
+
+            while (true) {
+                System.out.println("\n1. Insert Product");
+                System.out.println("2. View Products");
+                System.out.println("3. Update Product");
+                System.out.println("4. Delete Product");
+                System.out.println("5. Exit");
+                System.out.print("Enter your choice: ");
+                int choice = sc.nextInt();
+
+                switch (choice) {
+                    case 1 -> insertProduct(con, sc);
+                    case 2 -> viewProducts(con);
+                    case 3 -> updateProduct(con, sc);
+                    case 4 -> deleteProduct(con, sc);
+                    case 5 -> {
+                        System.out.println("Exiting..."); 
+                        return;
+                    }
+                    default -> System.out.println("Invalid choice! Try again.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    static void insertProduct(Connection con, Scanner sc) throws SQLException {
+        System.out.print("Enter Product ID: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+        System.out.print("Enter Product Name: ");
+        String name = sc.nextLine();
+        System.out.print("Enter Price: ");
+        double price = sc.nextDouble();
+        System.out.print("Enter Quantity: ");
+        int quantity = sc.nextInt();
+
+        String query = "INSERT INTO Product VALUES (?, ?, ?, ?)";
+        PreparedStatement pstmt = con.prepareStatement(query);
+        pstmt.setInt(1, id);
+        pstmt.setString(2, name);
+        pstmt.setDouble(3, price);
+        pstmt.setInt(4, quantity);
+
+        pstmt.executeUpdate();
+        System.out.println("Product inserted successfully!");
+    }
+
+    static void viewProducts(Connection con) throws SQLException {
+        String query = "SELECT * FROM Product";
+        Statement stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery(query);
+
+        System.out.println("\nProductID | ProductName | Price | Quantity");
+        System.out.println("------------------------------------------");
+
+        while (rs.next()) {
+            System.out.println(rs.getInt("ProductID") + " | " +
+                               rs.getString("ProductName") + " | " +
+                               rs.getDouble("Price") + " | " +
+                               rs.getInt("Quantity"));
+        }
+    }
+
+    static void updateProduct(Connection con, Scanner sc) throws SQLException {
+        System.out.print("Enter Product ID to Update: ");
+        int id = sc.nextInt();
+        System.out.print("Enter New Price: ");
+        double price = sc.nextDouble();
+
+        String query = "UPDATE Product SET Price = ? WHERE ProductID = ?";
+        PreparedStatement pstmt = con.prepareStatement(query);
+        pstmt.setDouble(1, price);
+        pstmt.setInt(2, id);
+
+        pstmt.executeUpdate();
+        System.out.println("Product updated successfully!");
+    }
+
+    static void deleteProduct(Connection con, Scanner sc) throws SQLException {
+        System.out.print("Enter Product ID to Delete: ");
+        int id = sc.nextInt();
+
+        String query = "DELETE FROM Product WHERE ProductID = ?";
+        PreparedStatement pstmt = con.prepareStatement(query);
+        pstmt.setInt(1, id);
+
+        pstmt.executeUpdate();
+        System.out.println("Product deleted successfully!");
+    }
+}
